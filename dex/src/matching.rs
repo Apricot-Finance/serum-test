@@ -595,9 +595,9 @@ impl<'ob> OrderBookState<'ob> {
         to_release: &mut RequestProceeds,
     ) -> DexResult<Option<OrderRemaining>> {
         let NewBidParams {
-            max_coin_qty,
+            max_coin_qty, // in lots
             native_pc_qty_locked,
-            limit_price,
+            limit_price, // lot-to-lot price
             order_id,
             owner,
             owner_slot,
@@ -614,9 +614,12 @@ impl<'ob> OrderBookState<'ob> {
         let pc_lot_size = self.market_state.pc_lot_size;
         let coin_lot_size = self.market_state.coin_lot_size;
 
+        // max_qc_qty in lots
         let max_pc_qty = fee_tier.remove_taker_fee(native_pc_qty_locked.get()) / pc_lot_size;
 
+        // coin_qty_remaining in lots
         let mut coin_qty_remaining = max_coin_qty.get();
+        // pc_qty_remaining in lots
         let mut pc_qty_remaining = max_pc_qty;
         let mut accum_maker_rebates = 0;
 
@@ -646,6 +649,7 @@ impl<'ob> OrderBookState<'ob> {
             }
 
             let offer_size = best_offer_ref.quantity();
+            // trade_qty in lots
             let trade_qty = offer_size
                 .min(coin_qty_remaining)
                 .min(pc_qty_remaining / best_offer_ref.price().get());

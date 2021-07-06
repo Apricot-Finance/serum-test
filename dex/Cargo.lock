@@ -699,7 +699,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "serum_dex"
+name = "serum_dex-apr"
 version = "0.3.0"
 dependencies = [
  "arbitrary",

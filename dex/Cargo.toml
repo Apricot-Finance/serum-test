@@ -1,7 +1,7 @@
 # Note: This crate must be built using do.sh
 
 [package]
-name = "serum_dex"
+name = "serum_dex-apr"
 version = "0.3.0"
 description = "Serum DEX"
 repository = "https://github.com/project-serum/serum-dex"
